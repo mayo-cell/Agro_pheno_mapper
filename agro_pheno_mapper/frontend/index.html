@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgroPheno Mapper — Drone Crop Stress & Canopy Analyzer</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">DIP</span>
+      <div>
+        <h1>AgroPheno Mapper</h1>
+        <p class="subtitle">Micro-Plot Drone Phenotyping &amp; Crop Stress Pipeline</p>
+      </div>
+    </div>
+    <div class="status-pill" id="statusPill">Ready</div>
+  </header>
+
+  <main class="container">
+    <!-- Control Toolbar -->
+    <section class="controls-card">
+      <div class="control-group">
+        <label for="plotName">Plot Name</label>
+        <input type="text" id="plotName" value="Plot A-1 (Demo)" placeholder="e.g. North Block B2" />
+      </div>
+
+      <div class="control-group">
+        <label for="gammaSlider">Gamma (Unit 2): <strong id="gammaValue">1.00</strong></label>
+        <input type="range" id="gammaSlider" min="0.4" max="2.0" step="0.1" value="1.0" />
+      </div>
+
+      <div class="control-group checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="sharpenToggle" checked />
+          <span>Unsharp Masking</span>
+        </label>
+      </div>
+
+      <div class="control-actions">
+        <input type="file" id="imageInput" accept="image/*" hidden />
+        <button class="btn btn-secondary" id="sampleBtn">Load Sample Drone Plot</button>
+        <button class="btn btn-primary" id="uploadBtn">Upload &amp; Analyze</button>
+      </div>
+    </section>
+
+    <!-- 4-Panel Pipeline Grid -->
+    <section class="grid-4">
+      <article class="panel">
+        <div class="panel-header">
+          <h2>1. Raw Drone RGB</h2>
+          <label class="mini-toggle">
+            <input type="checkbox" id="showEnhancedToggle" />
+            <span>Show Unit 2 Enhanced</span>
+          </label>
+        </div>
+        <div class="panel-body image-box">
+          <img id="imgRaw" alt="Raw or Enhanced Drone RGB" />
+          <div class="placeholder" id="phRaw">Upload a drone image or click "Load Sample Drone Plot"</div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <h2>2. ExG Vegetation Heatmap</h2>
+          <span class="unit-tag">Unit 3 · Color</span>
+        </div>
+        <div class="panel-body image-box">
+          <img id="imgHeatmap" alt="Excess Green Index Heatmap" />
+          <div class="placeholder" id="phHeatmap">ExG = 2g − r − b false-color stress map</div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <h2>3. Otsu Canopy Mask</h2>
+          <span class="unit-tag">Unit 4 &amp; 5 · Segment</span>
+        </div>
+        <div class="panel-body image-box">
+          <img id="imgMask" alt="Otsu Canopy Segmentation Mask" />
+          <div class="placeholder" id="phMask">White: Healthy · Amber: Stressed · Green: Contours</div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <h2>4. Plot Analytics</h2>
+          <button class="btn btn-small" id="exportCsvBtn" disabled>Export CSV</button>
+        </div>
+        <div class="panel-body analytics-body">
+          <div class="kpi-row">
+            <div class="kpi-card kpi-green">
+              <span class="kpi-label">Canopy Coverage</span>
+              <span class="kpi-val" id="valCanopy">—</span>
+            </div>
+            <div class="kpi-card kpi-amber">
+              <span class="kpi-label">Stressed Area</span>
+              <span class="kpi-val" id="valStressed">—</span>
+            </div>
+            <div class="kpi-card kpi-slate">
+              <span class="kpi-label">Bare Soil</span>
+              <span class="kpi-val" id="valSoil">—</span>
+            </div>
+          </div>
+
+          <div class="bars-box">
+            <div class="bar-row">
+              <span>Healthy Canopy</span>
+              <div class="bar-track"><div class="bar-fill fill-green" id="barHealthy"></div></div>
+              <span class="bar-pct" id="pctHealthy">0%</span>
+            </div>
+            <div class="bar-row">
+              <span>Stressed Zone</span>
+              <div class="bar-track"><div class="bar-fill fill-amber" id="barStressed"></div></div>
+              <span class="bar-pct" id="pctStressed">0%</span>
+            </div>
+            <div class="bar-row">
+              <span>Bare Soil</span>
+              <div class="bar-track"><div class="bar-fill fill-soil" id="barSoil"></div></div>
+              <span class="bar-pct" id="pctSoil">0%</span>
+            </div>
+          </div>
+
+          <div class="meta-grid">
+            <div><small>Otsu Threshold (ExG)</small><strong id="valOtsu">—</strong></div>
+            <div><small>Mean ExG / VARI</small><strong id="valIndices">—</strong></div>
+            <div><small>Canopy Clusters</small><strong id="valClusters">—</strong></div>
+            <div><small>Avg Compactness</small><strong id="valCompactness">—</strong></div>
+            <div><small>Row Uniformity</small><strong id="valUniformity">—</strong></div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Scan History Table (from SQLite Database) -->
+    <section class="history-card">
+      <div class="panel-header">
+        <h2>Saved Plot Scans (SQLite History)</h2>
+        <button class="btn btn-small" id="refreshHistoryBtn">Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Plot</th>
+              <th>File</th>
+              <th>Gamma</th>
+              <th>Canopy %</th>
+              <th>Stressed %</th>
+              <th>Uniformity %</th>
+              <th>Clusters</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="9" class="empty-row">No scans recorded yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>
