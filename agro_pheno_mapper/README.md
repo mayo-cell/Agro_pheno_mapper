@@ -5,11 +5,6 @@ Full-stack Digital Image Processing (DIP) application built with a **separated a
 - **Database (`backend/database.py`):** SQLite (`plots` and `scans` relational schema)
 - **Frontend (`frontend/`):** Vanilla HTML5, CSS3, and JavaScript (`index.html`, `styles.css`, `app.js`)
 
-## Syllabus Alignment (Gonzalez & Woods, 4th Edition)
-1. **Unit 2 — Spatial Domain Enhancement:** Power-law (Gamma) transformation ($s = c \cdot r^\gamma$), $3\times 3$ median smoothing, and unsharp masking.
-2. **Unit 3 — Color Image Processing:** Normalized RGB chromaticity, Excess Green Index ($ExG = 2g - r - b$), VARI, and exact HSI Hue conversion for chlorosis (yellowing) detection.
-3. **Unit 4 — Image Segmentation:** Otsu's optimal global thresholding on ExG and contour/edge boundary extraction.
-4. **Unit 5 — Representation & Description:** Morphological opening/closing, connected-component clustering, compactness ($4\pi A / P^2$), and row uniformity metrics.
 
 ## Quick Start
 ```bash
